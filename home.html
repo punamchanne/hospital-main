@@ -94,6 +94,7 @@
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span style="color: var(--success); font-size: 14px;">● ESP32 Connected</span>
                 <strong style="font-size: 14px;">User: Admin_01</strong>
+                <button onclick="openDevicePage()" style="margin-left:20px;padding:8px 16px;background:#27ae60;color:white;border:none;border-radius:6px;cursor:pointer;">Open Device Page</button>
             </div>
         </div>
 
@@ -186,6 +187,9 @@
     </div>
 
     <script>
+                function openDevicePage() {
+                    window.open('http://192.168.4.1', '_blank');
+                }
         // Tab Navigation
         function showPanel(panelId) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
