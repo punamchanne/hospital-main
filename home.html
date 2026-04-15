@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health IoT Pro - Integrated System</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        
+        body { display: flex; background-color: var(--bg); height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        .sidebar { 
+            width: 260px; background-color: var(--primary); color: white; 
+            padding: 20px; display: flex; flex-direction: column; 
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar h2 { font-size: 22px; margin-bottom: 30px; color: var(--accent); text-align: center; border-bottom: 1px solid #34495e; padding-bottom: 15px; }
+        .sidebar-menu { list-style: none; flex-grow: 1; }
+        .sidebar-menu li { 
+            padding: 15px; border-radius: 8px; margin-bottom: 8px; 
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; font-weight: 500;
+        }
+        .sidebar-menu li:hover, .sidebar-menu li.active { background: #34495e; color: var(--accent); }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .navbar { 
+            height: 70px; background: var(--white); display: flex; align-items: center; 
+            justify-content: space-between; padding: 0 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10;
+        }
+
+        .panel { display: none; padding: 25px; animation: fadeIn 0.4s ease; }
+        .panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- UI COMPONENTS --- */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { 
+            background: var(--white); padding: 20px; border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid var(--accent);
+        }
+        .card h3 { color: #7f8c8d; font-size: 14px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .value { font-size: 36px; font-weight: bold; color: var(--primary); }
+        .unit { font-size: 18px; color: #95a5a6; }
+
+        /* Status & Badges */
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .bg-normal { background: #d4edda; color: #155724; }
+        .bg-warning { background: #fff3cd; color: #856404; }
+        .bg-danger { background: #f8d7da; color: #721c24; }
+
+        .progress-container { background: #eee; height: 12px; border-radius: 6px; margin: 10px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent); transition: width 0.5s; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; }
+        th { text-align: left; background: #f8f9fa; padding: 15px; color: #2c3e50; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+
+        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f1f1; }
+        
+        /* Form Styles */
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-top: 5px; width: 100%; }
+        .btn-save { background: var(--success); color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; }
+        .btn-save:hover { background: #27ae60; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>HEALTH IOT PRO</h2>
+        <ul class="sidebar-menu">
+            <li id="btn-hospital" class="active" onclick="showPanel('hospital')">🏥 Hospital Dash</li>
+            <li id="btn-patient" onclick="showPanel('patient')">👤 Patient Portal</li>
+            <li id="btn-logs" onclick="showPanel('logs')">📊 History Logs</li>
+            <li id="btn-admin" onclick="showPanel('admin')">⚙️ Manage Data</li>
+            <li style="margin-top: auto; color: var(--danger);">🚪 Logout</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="navbar">
+            <h3 id="nav-title">Hospital Overview</h3>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="color: var(--success); font-size: 14px;">● ESP32 Connected</span>
+                <strong style="font-size: 14px;">User: Admin_01</strong>
+            </div>
+        </div>
+
+        <div id="hospital" class="panel active">
+            <div class="grid">
+                <div class="card" style="grid-column: span 2; border-color: var(--primary);">
+                    <h3>Hospital Information</h3>
+                    <div class="info-row">
+                        <span><strong>Name:</strong> <span id="disp-h-name">City Life Multi-Specialty</span></span>
+                        <span><b class="badge bg-normal">Premium Provider</b></span>
+                    </div>
+                    <div class="info-row">
+                        <span><strong>Address:</strong> <span id="disp-h-addr">78 Health St, Medical District</span></span>
+                        <span><strong>Contact:</strong> <span id="disp-h-contact">+91 9900-1122</span></span>
+                    </div>
+                </div>
+
+                <div class="card" style="border-color: var(--accent);">
+                    <h3>💨 Oxygen Supply (O2)</h3>
+                    <div class="value"><span id="disp-o2-val">88</span> <small class="unit">PSI</small></div>
+                    <div class="progress-container">
+                        <div id="disp-o2-bar" class="progress-bar" style="width: 88%;"></div>
+                    </div>
+                    <small>Tank Status: High Pressure</small>
+                </div>
+
+                <div class="card" style="border-color: var(--danger);">
+                    <h3>🚨 Emergency Room (ER)</h3>
+                    <div class="value"><span id="disp-er-beds">03</span> <small class="unit">Free Beds</small></div>
+                    <p id="disp-er-status" style="color: var(--danger); font-size: 12px; font-weight: bold;">Status: Critical Load</p>
+                </div>
+
+                <div class="card">
+                    <h3>👨‍⚕️ Available Doctors</h3>
+                    <div class="info-row"><small id="disp-doc1-name">Dr. Kapoor (Cardio)</small><small id="disp-doc1-status">Available</small></div>
+                    <div class="info-row"><small>Dr. Verma (Neuro)</small><small>04:00 PM</small></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="patient" class="panel">
+            <div class="grid">
+                <div class="card"><h3>Heart Beat</h3><div id="heart-val" class="value" style="color: var(--danger);">72 <small class="unit">BPM</small></div></div>
+                <div class="card"><h3>SpO2 (Oxygen)</h3><div id="spo2-val" class="value" style="color: var(--accent);">98 <small class="unit">%</small></div></div>
+                <div class="card"><h3>Body Temp</h3><div class="value" style="color: var(--warning);">36.5 <small class="unit">°C</small></div></div>
+                <div id="ai-alert" class="card" style="grid-column: span 3; background: #fffcf0; border-color: var(--warning);">
+                    <h3 id="patient-status-title">Condition: <span id="classification-text">NORMAL</span></h3>
+                    <p id="suggestion-box">All vitals are within normal range. Stay hydrated.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="logs" class="panel">
+            <div class="card" style="width: 100%; border-color: var(--primary);">
+                <h3>Patient Medical Logs</h3>
+                <table>
+                    <thead><tr><th>Time</th><th>Heart Rate</th><th>SpO2</th><th>Classification</th><th>Hospital Suggestion</th></tr></thead>
+                    <tbody id="log-table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin" class="panel">
+            <div class="grid">
+                <div class="card" style="border-color: var(--primary);">
+                    <h3>Edit Hospital Info</h3>
+                    <label>Hospital Name</label><input type="text" id="in-h-name" placeholder="Enter Name">
+                    <label>Address</label><input type="text" id="in-h-addr" placeholder="Enter Address">
+                    <label>Contact</label><input type="text" id="in-h-contact" placeholder="Enter Phone">
+                </div>
+                <div class="card" style="border-color: var(--danger);">
+                    <h3>Edit ER & Oxygen</h3>
+                    <label>Available ER Beds</label><input type="number" id="in-er-beds" placeholder="Ex: 5">
+                    <label>Oxygen Level (0-100 PSI)</label><input type="number" id="in-o2-level" placeholder="Ex: 90">
+                </div>
+                <div class="card" style="border-color: var(--success);">
+                    <h3>Edit Doctor Status</h3>
+                    <label>Doctor Name</label><input type="text" id="in-doc-name" placeholder="Dr. Name">
+                    <label>Availability</label>
+                    <select id="in-doc-status">
+                        <option value="Available">Available</option>
+                        <option value="Busy">Busy</option>
+                        <option value="Away">Away</option>
+                        <option value="On Leave">On Leave</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-save" onclick="updateDashboard()">💾 SAVE & UPDATE DASHBOARD</button>
+        </div>
+    </div>
+
+    <script>
+        // Tab Navigation
+        function showPanel(panelId) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(panelId).classList.add('active');
+            document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+            document.getElementById('btn-' + panelId).classList.add('active');
+            
+            const titles = { hospital: "Hospital Overview", patient: "User Monitoring Portal", logs: "Medical History Logs", admin: "Manage Hospital Data" };
+            document.getElementById('nav-title').innerText = titles[panelId];
+        }
+
+        // Logic to update Dashboard from Admin Inputs
+        function updateDashboard() {
+            const hName = document.getElementById('in-h-name').value;
+            const hAddr = document.getElementById('in-h-addr').value;
+            const hContact = document.getElementById('in-h-contact').value;
+            const erBeds = document.getElementById('in-er-beds').value;
+            const o2Level = document.getElementById('in-o2-level').value;
+            const docName = document.getElementById('in-doc-name').value;
+            const docStatus = document.getElementById('in-doc-status').value;
+
+            // Update UI
+            if(hName) document.getElementById('disp-h-name').innerText = hName;
+            if(hAddr) document.getElementById('disp-h-addr').innerText = hAddr;
+            if(hContact) document.getElementById('disp-h-contact').innerText = hContact;
+            
+            if(erBeds) {
+                document.getElementById('disp-er-beds').innerText = erBeds.padStart(2, '0');
+                const erLabel = document.getElementById('disp-er-status');
+                if(erBeds < 3) {
+                    erLabel.innerText = "Status: Critical Load";
+                    erLabel.style.color = "var(--danger)";
+                } else {
+                    erLabel.innerText = "Status: Stable";
+                    erLabel.style.color = "var(--success)";
+                }
+            }
+
+            if(o2Level) {
+                document.getElementById('disp-o2-val').innerText = o2Level;
+                document.getElementById('disp-o2-bar').style.width = o2Level + "%";
+            }
+
+            if(docName) document.getElementById('disp-doc1-name').innerText = docName;
+            if(docStatus) document.getElementById('disp-doc1-status').innerText = docStatus;
+
+            alert("Data Updated Successfully!");
+            showPanel('hospital');
+        }
+
+        // Simulation for Patient Vitals
+        setInterval(() => {
+            const heart = Math.floor(Math.random() * (110 - 65)) + 65;
+            const spo2 = Math.floor(Math.random() * (100 - 90)) + 90;
+            
+            document.getElementById('heart-val').innerHTML = `${heart} <small class="unit">BPM</small>`;
+            document.getElementById('spo2-val').innerHTML = `${spo2} <small class="unit">%</small>`;
+
+            const alertBox = document.getElementById('ai-alert');
+            const classText = document.getElementById('classification-text');
+            const suggest = document.getElementById('suggestion-box');
+
+            let status = "NORMAL";
+            if(heart > 100 || spo2 < 92) {
+                status = "CRITICAL";
+                alertBox.style.background = "#fdf2f2";
+                alertBox.style.borderColor = "var(--danger)";
+                suggest.innerHTML = "⚠️ <b>Action Required:</b> Nearest hospital: <b>" + document.getElementById('disp-h-name').innerText + "</b>.";
+                addLogEntry(heart, spo2, "Critical");
+            } else {
+                status = "NORMAL";
+                alertBox.style.background = "#f4faf6";
+                alertBox.style.borderColor = "var(--success)";
+                suggest.innerText = "Patient is stable. No action needed.";
+            }
+            classText.innerText = status;
+        }, 5000);
+
+        function addLogEntry(h, s, status) {
+            const table = document.getElementById('log-table');
+            const row = table.insertRow(0);
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            row.innerHTML = `
+                <td>${time}</td><td>${h} BPM</td><td>${s}%</td>
+                <td><span class="badge ${status === 'Critical' ? 'bg-danger' : 'bg-normal'}">${status}</span></td>
+                <td>${status === 'Critical' ? 'ER Visit' : 'None'}</td>
+            `;
+            if(table.rows.length > 8) table.deleteRow(8);
+        }
+    </script>
+</body>
+</html>
