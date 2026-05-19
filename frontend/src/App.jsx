@@ -7,17 +7,30 @@ import "./index.css";
 
 const Dashboard = ({ user }) => {
   const [activePanel, setActivePanel] = useState("hospital");
-  const [hInfo, setHInfo] = useState({
+
+  const defaultHInfo = {
     name: "City Life Multi-Specialty",
     addr: "78 Health St, Medical District",
     contact: "+91 9900-1122",
     erBeds: "03",
     o2Level: "88"
-  });
-  const [docs, setDocs] = useState([
+  };
+
+  const defaultDocs = [
     { name: "Dr. Kapoor (Cardio)", status: "Available" },
     { name: "Dr. Verma (Neuro)", status: "04:00 PM" }
-  ]);
+  ];
+
+  const [hInfo, setHInfo] = useState(() => {
+    const saved = localStorage.getItem(`hInfo_${user}`);
+    return saved ? JSON.parse(saved) : defaultHInfo;
+  });
+
+  const [docs, setDocs] = useState(() => {
+    const saved = localStorage.getItem(`docs_${user}`);
+    return saved ? JSON.parse(saved) : defaultDocs;
+  });
+
   const [vitals, setVitals] = useState({ heart: 72, spo2: 98, temp: 36.5, status: "NORMAL" });
   const [predictionData, setPredictionData] = useState({
     age: "", sex: "", cp: "", trestbps: "", chol: "", fbs: "", thalach: ""
@@ -25,6 +38,25 @@ const Dashboard = ({ user }) => {
   const [predictResult, setPredictResult] = useState(null);
   const [predictError, setPredictError] = useState("");
   const [logs, setLogs] = useState([]);
+
+  // Fetch Dashboard Data from Backend
+  const fetchDashboardData = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/dashboard-data/${user}`);
+      if (response.data && response.data.h_info && response.data.docs) {
+        setHInfo(response.data.h_info);
+        setDocs(response.data.docs);
+        localStorage.setItem(`hInfo_${user}`, JSON.stringify(response.data.h_info));
+        localStorage.setItem(`docs_${user}`, JSON.stringify(response.data.docs));
+      }
+    } catch (err) {
+      console.error("Failed to fetch dashboard data from backend", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [user]);
 
   // Fetch History Logs from Backend
   const fetchLogs = async () => {
@@ -39,6 +71,26 @@ const Dashboard = ({ user }) => {
   useEffect(() => {
     if (activePanel === "logs") fetchLogs();
   }, [activePanel]);
+
+  const handleSaveDashboard = async () => {
+    // 1. Save to LocalStorage immediately
+    localStorage.setItem(`hInfo_${user}`, JSON.stringify(hInfo));
+    localStorage.setItem(`docs_${user}`, JSON.stringify(docs));
+
+    // 2. Save to backend database
+    try {
+      await axios.post("http://localhost:5000/dashboard-data", {
+        email: user,
+        h_info: hInfo,
+        docs: docs
+      });
+      alert("Dashboard updated and saved successfully!");
+    } catch (err) {
+      console.error("Failed to sync dashboard data with server", err);
+      alert("Dashboard updated locally, but failed to sync with server.");
+    }
+    setActivePanel("hospital");
+  };
 
   // Simulation for Patient Vitals (Heart Beat, SpO2)
   useEffect(() => {
@@ -348,7 +400,7 @@ const Dashboard = ({ user }) => {
                     ))}
                   </div>
                 </div>
-                <button className="btn-primary" onClick={() => { alert("Dashboard Updated Locally!"); setActivePanel("hospital"); }}>
+                <button className="btn-primary" onClick={handleSaveDashboard}>
                   💾 SAVE & UPDATE DASHBOARD
                 </button>
               </div>

@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import joblib
 import numpy as np
 import os
+import json
 
 # Load environment variables
 load_dotenv()
@@ -31,6 +32,12 @@ class MedicalLog(db.Model):
     user_email = db.Column(db.String(120), nullable=False)
     result = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.String(50), nullable=False)
+
+class DashboardData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_email = db.Column(db.String(120), unique=True, nullable=False)
+    h_info = db.Column(db.Text, nullable=False)  # JSON-serialized hospital info
+    docs = db.Column(db.Text, nullable=False)    # JSON-serialized doctor status list
 
 # Create database tables and seed default user
 with app.app_context():
@@ -108,6 +115,55 @@ def get_logs(email):
     for log in logs:
         output.append({'result': log.result, 'timestamp': log.timestamp})
     return jsonify(output)
+
+# Dashboard Data Routes
+@app.route('/dashboard-data/<email>', methods=['GET'])
+def get_dashboard_data(email):
+    data = DashboardData.query.filter_by(user_email=email).first()
+    if not data:
+        return jsonify({'message': 'No custom dashboard data found, using defaults'}), 404
+        
+    try:
+        h_info_parsed = json.loads(data.h_info)
+        docs_parsed = json.loads(data.docs)
+        return jsonify({
+            'h_info': h_info_parsed,
+            'docs': docs_parsed
+        }), 200
+    except Exception as e:
+        return jsonify({'error': 'Failed to parse dashboard data', 'details': str(e)}), 500
+
+@app.route('/dashboard-data', methods=['POST'])
+def save_dashboard_data():
+    req_data = request.get_json()
+    email = req_data.get('email')
+    h_info = req_data.get('h_info')
+    docs = req_data.get('docs')
+
+    if not email or not h_info or not docs:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    try:
+        h_info_str = json.dumps(h_info)
+        docs_str = json.dumps(docs)
+        
+        record = DashboardData.query.filter_by(user_email=email).first()
+        if record:
+            record.h_info = h_info_str
+            record.docs = docs_str
+        else:
+            record = DashboardData(
+                user_email=email,
+                h_info=h_info_str,
+                docs=docs_str
+            )
+            db.session.add(record)
+            
+        db.session.commit()
+        return jsonify({'message': 'Dashboard data saved successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to save dashboard data', 'details': str(e)}), 500
 
 # Prediction Route
 @app.route('/predict', methods=['POST'])
