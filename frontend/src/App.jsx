@@ -189,6 +189,7 @@ const Dashboard = ({ user }) => {
           <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
              <h3>{menuItems.find(m => m.id === activePanel)?.label}</h3>
              <button onClick={openDevicePage} className="btn-device">Open Device Page (ESP32)</button>
+             <button onClick={openDevicePage} className="btn-hardware">Hardware Open</button>
           </div>
           <div className="nav-user">
             <span className="status-dot">● ESP32 Connected</span>
@@ -251,6 +252,17 @@ const Dashboard = ({ user }) => {
                 <div className="card">
                   <h3>Body Temp</h3>
                   <div className="big-value warning-text">{vitals.temp} <small>°C</small></div>
+                </div>
+                <div className="card">
+                  <h3>ESP32 Hardware</h3>
+                  <div style={{ marginTop: '10px' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '15px', lineHeight: '1.4' }}>
+                      Access the web portal of your connected ESP32 sensor hardware directly.
+                    </p>
+                    <button onClick={openDevicePage} className="btn-hardware" style={{ width: '100%' }}>
+                      Hardware Open
+                    </button>
+                  </div>
                 </div>
                 <div className={`card full-width ${vitals.status === "CRITICAL" ? "critical-alert" : "stable-alert"}`}>
                    <h3>Condition: {vitals.status}</h3>
@@ -407,12 +419,7 @@ const Dashboard = ({ user }) => {
             </div>
           )}
 
-          {activePanel === "patient" && (
-            <div className="panel-fade card">
-              <h3>Patient Portal</h3>
-              <p>Real-time patient monitoring data from ESP32 sensors.</p>
-            </div>
-          )}
+
         </div>
       </div>
     </div>

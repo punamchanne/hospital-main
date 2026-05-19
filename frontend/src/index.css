@@ -382,3 +382,20 @@ body {
 .docs-list {
   margin-top: 10px;
 }
+
+.btn-hardware {
+  background: #9b59b6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.btn-hardware:hover {
+  background: #8e44ad;
+  transform: translateY(-1px);
+}
